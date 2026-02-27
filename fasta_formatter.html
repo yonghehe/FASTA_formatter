@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FASTA Formatter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #222632;
+            --border: #2e3345;
+            --text: #e4e6f0;
+            --text-dim: #8b8fa7;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --success: #00cec9;
+            --danger: #ff6b6b;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-light), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: .25rem;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: .9rem;
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 820px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Card */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: border-color .2s;
+        }
+
+        .card:focus-within {
+            border-color: var(--accent);
+        }
+
+        .card-title {
+            font-size: .85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--accent-light);
+            margin-bottom: .75rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 160px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: .85rem 1rem;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .82rem;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        textarea::placeholder {
+            color: var(--text-dim);
+            opacity: .6;
+        }
+
+        textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .hint {
+            font-size: .75rem;
+            color: var(--text-dim);
+            margin-top: .4rem;
+        }
+
+        /* Toggle row */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-top: .75rem;
+        }
+
+        .toggle-row label {
+            font-size: .85rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Toggle switch */
+        .switch {
+            position: relative;
+            width: 42px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 24px;
+            cursor: pointer;
+            transition: background .25s;
+        }
+
+        .slider::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            top: 3px;
+            background: var(--text);
+            border-radius: 50%;
+            transition: transform .25s;
+        }
+
+        .switch input:checked+.slider {
+            background: var(--accent);
+        }
+
+        .switch input:checked+.slider::before {
+            transform: translateX(18px);
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            font-family: 'Inter', sans-serif;
+            font-size: .85rem;
+            font-weight: 600;
+            padding: .7rem 1.6rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform .15s, box-shadow .2s, opacity .2s;
+        }
+
+        button:active {
+            transform: scale(.97);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(108, 92, 231, .35);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(108, 92, 231, .5);
+        }
+
+        .btn-secondary {
+            background: var(--surface2);
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            color: var(--text);
+            border-color: var(--text-dim);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894, var(--success));
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(0, 206, 201, .3);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 6px 20px rgba(0, 206, 201, .45);
+        }
+
+        /* Output */
+        #outputCard {
+            display: none;
+        }
+
+        #outputCard.visible {
+            display: block;
+        }
+
+        pre {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .8rem;
+            line-height: 1.55;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--success);
+            color: #000;
+            font-weight: 600;
+            font-size: .85rem;
+            padding: .65rem 1.4rem;
+            border-radius: 8px;
+            opacity: 0;
+            transition: transform .3s ease, opacity .3s ease;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Status badge */
+        .status {
+            display: inline-block;
+            font-size: .8rem;
+            font-weight: 500;
+            padding: .25rem .65rem;
+            border-radius: 6px;
+            margin-bottom: .75rem;
+        }
+
+        .status-ok {
+            background: rgba(0, 206, 201, .15);
+            color: var(--success);
+        }
+
+        .status-err {
+            background: rgba(255, 107, 107, .15);
+            color: var(--danger);
+        }
+
+        /* File input styling */
+        .file-label {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .8rem;
+            color: var(--accent-light);
+            cursor: pointer;
+            margin-top: .5rem;
+            transition: color .2s;
+        }
+
+        .file-label:hover {
+            color: var(--text);
+        }
+
+        .file-label input {
+            display: none;
+        }
+
+        /* Textarea wrapper for clear button */
+        .textarea-wrap {
+            position: relative;
+        }
+
+        .btn-clear-field {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-dim);
+            font-size: .85rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity .2s, color .2s, border-color .2s;
+            padding: 0;
+            z-index: 2;
+        }
+
+        .textarea-wrap:hover .btn-clear-field,
+        .textarea-wrap:focus-within .btn-clear-field {
+            opacity: 1;
+        }
+
+        .btn-clear-field:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        /* Drag-over highlight for textareas */
+        textarea.drag-over {
+            border-color: var(--accent) !important;
+            background: rgba(108, 92, 231, .08);
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .container {
+                gap: 1rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>FASTA Formatter</h1>
+    <p class="subtitle">Paste raw sequences → get formatted FASTA. Works entirely offline.</p>
+
+    <div class="container">
+
+        <!-- Sequences input -->
+        <div class="card">
+            <div class="card-title">① Sequences</div>
+            <div class="textarea-wrap">
+                <textarea id="seqInput"
+                    placeholder="Paste one raw sequence per line…&#10;MKTLLLTLVVVTIVCLDLGYTFQVNDHFCEKILKNLPKKNDLVGCATVNEDWPKAHAYDRCIRSQLSERQYV&#10;MLLSVPLLLGLLGLAAADREKLTGSQASSRSSNYCNQMMTSRQMRSEGFKQILLPLISR"></textarea>
+                <button type="button" class="btn-clear-field" id="clearSeqBtn" title="Clear">✕</button>
+            </div>
+            <div style="margin-top:.5rem;">
+                <button class="btn-secondary" id="clearBtn">Clear All</button>
+            </div>
+            <p class="hint">One sequence per line, or drag-drop / upload a .txt file.</p>
+            <label class="file-label">
+                📎 Upload .txt
+                <input type="file" id="seqFile" accept=".txt,.fasta,.fa,.fsa">
+            </label>
+            <div class="toggle-row">
+                <label class="switch"><input type="checkbox" id="joinSeqs"><span class="slider"></span></label>
+                <label for="joinSeqs">Join multi-line sequences (concat lines until next &gt; header)</label>
+            </div>
+            <div class="toggle-row">
+                <label class="switch"><input type="checkbox" id="removeDups"><span class="slider"></span></label>
+                <label for="removeDups">Remove duplicate sequences (keep first occurrence)</label>
+            </div>
+        </div>
+
+        <!-- Headers input -->
+        <div class="card" id="headerCard">
+            <div class="card-title">② Headers (optional)</div>
+            <div class="toggle-row">
+                <label class="switch"><input type="checkbox" id="useHeaders"><span class="slider"></span></label>
+                <label for="useHeaders">Provide custom headers</label>
+            </div>
+            <div id="headerSection" style="display:none; margin-top:.75rem;">
+                <div class="textarea-wrap">
+                    <textarea id="headerInput"
+                        placeholder="One header per line (with or without leading >)&#10;>Allergen_1&#10;>Allergen_2"></textarea>
+                    <button type="button" class="btn-clear-field" id="clearHeaderBtn" title="Clear">✕</button>
+                </div>
+                <p class="hint">Must match the number of sequences. Drag-drop / upload a .txt file.</p>
+                <label class="file-label">
+                    📎 Upload .txt
+                    <input type="file" id="headerFile" accept=".txt">
+                </label>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="btn-row">
+            <button class="btn-primary" id="formatBtn">Format FASTA</button>
+        </div>
+
+        <!-- Output -->
+        <div class="card" id="outputCard">
+            <div class="card-title">Output</div>
+            <div id="statusBadge"></div>
+            <pre id="output"></pre>
+            <div class="btn-row" style="margin-top:.75rem;">
+                <button class="btn-secondary" id="copyBtn">📋 Copy</button>
+                <button class="btn-success" id="downloadBtn">⬇ Download .fasta</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ─── Elements ──────────────────────────────────────────
+        const seqInput = document.getElementById('seqInput');
+        const seqFile = document.getElementById('seqFile');
+        const useHeaders = document.getElementById('useHeaders');
+        const headerSection = document.getElementById('headerSection');
+        const headerInput = document.getElementById('headerInput');
+        const headerFile = document.getElementById('headerFile');
+        const formatBtn = document.getElementById('formatBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const outputCard = document.getElementById('outputCard');
+        const statusBadge = document.getElementById('statusBadge');
+        const outputPre = document.getElementById('output');
+        const copyBtn = document.getElementById('copyBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const toastEl = document.getElementById('toast');
+        const joinSeqs = document.getElementById('joinSeqs');
+        const removeDups = document.getElementById('removeDups');
+
+        // ─── Toggle header section ─────────────────────────────
+        useHeaders.addEventListener('change', () => {
+            headerSection.style.display = useHeaders.checked ? 'block' : 'none';
+        });
+
+        // ─── File uploads ──────────────────────────────────────
+        seqFile.addEventListener('change', () => readFile(seqFile, seqInput));
+        headerFile.addEventListener('change', () => readFile(headerFile, headerInput));
+
+        function readFile(fileInput, targetTextarea) {
+            const file = fileInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => { targetTextarea.value = reader.result; };
+            reader.readAsText(file);
+        }
+
+        // ─── Core formatter (mirrors bot.py's format_fasta) ────
+        function wrapSequence(seq, width = 60) {
+            const lines = [];
+            for (let i = 0; i < seq.length; i += width) {
+                lines.push(seq.slice(i, i + width));
+            }
+            return lines.join('\n');
+        }
+
+        function formatFasta(rawLines, customHeaders) {
+            const entries = [];
+            let seqIndex = 0;
+            let currentHeader = null;
+
+            for (let i = 0; i < rawLines.length; i++) {
+                const line = rawLines[i];
+                if (line.startsWith('>')) {
+                    currentHeader = line;
+                } else {
+                    let header;
+                    if (currentHeader) {
+                        header = currentHeader;
+                        currentHeader = null; // Consume the inline header
+                    } else if (customHeaders && customHeaders.length > seqIndex) {
+                        let h = customHeaders[seqIndex].trim();
+                        if (!h.startsWith('>')) h = '>' + h;
+                        header = h;
+                    } else {
+                        header = `>Protein_${seqIndex + 1}`;
+                    }
+                    const upperSeq = line.toUpperCase();
+                    const wrapped = wrapSequence(upperSeq);
+                    entries.push(`${header}\n${wrapped}`);
+                    seqIndex++;
+                }
+            }
+            return entries.join('\n');
+        }
+
+        // ─── Format button ────────────────────────────────────
+        formatBtn.addEventListener('click', () => {
+            let rawLines = [];
+            const inputLines = seqInput.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+            if (joinSeqs.checked) {
+                // If checked, join sequences until a new header
+                let currentSeq = '';
+                for (const line of inputLines) {
+                    if (line.startsWith('>')) {
+                        if (currentSeq) rawLines.push(currentSeq);
+                        rawLines.push(line);
+                        currentSeq = '';
+                    } else {
+                        currentSeq += line;
+                    }
+                }
+                if (currentSeq) rawLines.push(currentSeq);
+            } else {
+                rawLines = inputLines;
+            }
+
+            if (rawLines.length === 0) {
+                showStatus('No sequences entered.', false);
+                outputPre.textContent = '';
+                outputCard.classList.add('visible');
+                return;
+            }
+
+            let headers = null;
+            if (useHeaders.checked) {
+                headers = headerInput.value
+                    .split('\n')
+                    .map(l => l.trim())
+                    .filter(l => l.length > 0);
+                if (headers.length !== rawLines.length) {
+                    showStatus(
+                        `Mismatch: ${rawLines.length} sequences vs ${headers.length} headers.`,
+                        false
+                    );
+                    outputPre.textContent = '';
+                    outputCard.classList.add('visible');
+                    return;
+                }
+            }
+
+            let finalRawLines = [];
+            if (joinSeqs.checked) {
+                let currentSeq = '';
+                let currentHeader = '';
+                let seqIndex = 0;
+
+                for (let i = 0; i < rawLines.length; i++) {
+                    const line = rawLines[i];
+                    if (line.startsWith('>')) {
+                        if (currentSeq) {
+                            finalRawLines.push(currentHeader || `>Protein_${seqIndex + 1}`);
+                            finalRawLines.push(currentSeq);
+                            currentSeq = '';
+                            seqIndex++;
+                        }
+                        currentHeader = line;
+                    } else {
+                        currentSeq += line;
+                    }
+                }
+                if (currentSeq) {
+                    finalRawLines.push(currentHeader || `>Protein_${seqIndex + 1}`);
+                    finalRawLines.push(currentSeq);
+                }
+            } else {
+                finalRawLines = rawLines;
+            }
+
+            // ── Remove duplicate sequences (keep first) ──
+            if (removeDups.checked) {
+                const seen = new Set();
+                const dedupedLines = [];
+                for (let i = 0; i < finalRawLines.length; i++) {
+                    const line = finalRawLines[i];
+                    if (line.startsWith('>')) {
+                        // header line – peek at next line for the sequence
+                        const seq = (i + 1 < finalRawLines.length && !finalRawLines[i + 1].startsWith('>')) ? finalRawLines[i + 1].toUpperCase() : '';
+                        if (!seen.has(seq)) {
+                            seen.add(seq);
+                            dedupedLines.push(line);
+                            if (seq) { dedupedLines.push(finalRawLines[i + 1]); }
+                            i++; // skip the sequence line we already handled
+                        } else {
+                            i++; // skip the duplicate sequence line
+                        }
+                    } else {
+                        // bare sequence (no header)
+                        const seq = line.toUpperCase();
+                        if (!seen.has(seq)) {
+                            seen.add(seq);
+                            dedupedLines.push(line);
+                        }
+                    }
+                }
+                finalRawLines = dedupedLines;
+            }
+
+            const result = formatFasta(finalRawLines, headers);
+            outputPre.textContent = result;
+            const formattedCount = result ? result.split(/^>/m).length - 1 : 0;
+            showStatus(`${formattedCount} sequence(s) formatted.`, true);
+            outputCard.classList.add('visible');
+            outputCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        // ─── Copy ──────────────────────────────────────────────
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(outputPre.textContent).then(() => {
+                toast('Copied to clipboard!');
+            });
+        });
+
+        // ─── Download ──────────────────────────────────────────
+        downloadBtn.addEventListener('click', () => {
+            const name = prompt('Enter a filename for the FASTA file:', 'sequences');
+            if (name === null) return; // user cancelled
+            const filename = (name.trim() || 'sequences') + '.fasta';
+            const blob = new Blob([outputPre.textContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast('Download started!');
+        });
+
+        // ─── Clear ─────────────────────────────────────────────
+        clearBtn.addEventListener('click', () => {
+            seqInput.value = '';
+            headerInput.value = '';
+            outputPre.textContent = '';
+            outputCard.classList.remove('visible');
+            seqFile.value = '';
+            headerFile.value = '';
+        });
+
+        // ─── Helpers ───────────────────────────────────────────
+        function showStatus(msg, ok) {
+            statusBadge.className = 'status ' + (ok ? 'status-ok' : 'status-err');
+            statusBadge.textContent = msg;
+        }
+
+        function toast(msg) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            setTimeout(() => toastEl.classList.remove('show'), 2000);
+        }
+
+        // ─── Clear individual textareas ─────────────────────────
+        document.getElementById('clearSeqBtn').addEventListener('click', () => {
+            seqInput.value = '';
+            seqFile.value = '';
+        });
+        document.getElementById('clearHeaderBtn').addEventListener('click', () => {
+            headerInput.value = '';
+            headerFile.value = '';
+        });
+
+        // ─── Drag & drop helper ─────────────────────────────────
+        function enableDragDrop(textarea, fileInput) {
+            textarea.addEventListener('dragover', e => {
+                e.preventDefault();
+                textarea.classList.add('drag-over');
+            });
+            textarea.addEventListener('dragleave', () => {
+                textarea.classList.remove('drag-over');
+            });
+            textarea.addEventListener('drop', e => {
+                e.preventDefault();
+                textarea.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => { textarea.value = reader.result; };
+                    reader.readAsText(file);
+                }
+            });
+        }
+
+        enableDragDrop(seqInput, seqFile);
+        enableDragDrop(headerInput, headerFile);
+    </script>
+
+</body>
+
+</html>
